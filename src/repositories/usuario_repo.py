@@ -1,37 +1,51 @@
 import json
-from pathlib import Path
+import os 
 from src.models.usuario import User
 
 class UsuarioRepository:
-    def __init__(self, filepath="usuarios.json"):
-        self.filepath = Path(filepath)
-        if not self.filepath.exists():
-            self.filepath.write_text("[]")
+    def __init__(self, filepath="data/usuarios.json"):
+        self.filepath = filepath
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        if not os.path.isfile(self.filepath):
+            with open(self.filepath, "w") as f:
+                json.dump([], f)
+    def _load_all(self):
+        with open(self.filepath, "r") as f:
+            data = json.load(f)
+        return data
+    
+    def _save_all(self, data):
+        with open(self.filepath, "w") as f:
+            json.dump(data, f, indent=2)
 
-    def guardar(self, user: User):
-        usuarios = self._cargar_todos()
-        usuarios = [u for u in usuarios if u['username'] != user.username]
-        usuarios.append(self._serialize(user))
-        self.filepath.write_text(json.dumps(usuarios, indent=2))
+    def save(self, user: User):
+        data = self._load_all()
+        found = False
+        for i, u in enumerate(data):
+            if u["username"] == user.username:
+                data[i] = self._user_to_dict(user)
+                found = True
+                break
+        if not found:
+            data.append(self._user_to_dict(user))
+        self._save_all(data)
 
-    def buscar_por_username(self, username):
-        usuarios = self._cargar_todos()
-        for u in usuarios:
-            if u['username'] == username:
-                return self._deserialize(u)
+    def get_by_username(self, username: str):
+        data = self._load_all()
+        for u in data:
+            if u["username"] == username:
+                return self._dict_to_user(u)
         return None
 
-    def _cargar_todos(self):
-        return json.loads(self.filepath.read_text())
-
-    def _serialize(self, user: User):
+    def _user_to_dict(self, user: User):
         return {
+            "id": user.id,
             "username": user.username,
             "password_hash": user.password_hash,
             "tokens": user.tokens
         }
-
-    def _deserialize(self, data):
-        user = User(data['username'], data['password_hash'])
+    def _dict_to_user(self,data):
+        user = User(data["username"], data["password_hash"])
+        user.id = data["id"]
         user.tokens = data.get("tokens", [])
         return user
