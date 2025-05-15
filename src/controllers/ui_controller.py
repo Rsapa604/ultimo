@@ -23,3 +23,33 @@ class UIController:
             return token
         except Exception as e:
             return f"Error: {e}"
+        
+    def obtener_encuestas_activas(self):
+        return self.poll_service.get_active_polls()
+
+    def votar(self, poll_id, username, opcion):
+        try:
+            self.poll_service.vote(poll_id, username, opcion)
+            return "Voto registrado."
+        except Exception as e:
+            return f"Error: {e}"
+
+    def obtener_tokens_usuario(self, username):
+        try:
+            return self.nft_service.get_tokens_by_owner(username)
+        except Exception as e:
+            return f"Error: {e}"
+
+    def transferir_token(self, token_id, owner, nuevo_owner):
+        try:
+            self.nft_service.transfer_token(token_id, owner, nuevo_owner)
+            return "Token transferido."
+        except Exception as e:
+            return f"Error: {e}"
+
+    def chatbot_responder(self, username, pregunta):
+        try:
+            respuesta = self.chatbot_service.respond(username, pregunta)
+            return respuesta
+        except Exception as e:
+            return f"Error: {e}"
