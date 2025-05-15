@@ -47,4 +47,30 @@ class PollService(Observable):
         self.encuesta_repo.save_poll(poll)
         self.check_auto_close(poll)
 
-     
+    def check_auto_close(self, poll: Poll):
+        ahora = datetime.datetime.now()
+        if poll.estado == "activa" and ahora > poll.timestamp_inicio + poll.duracion:
+            self.close_poll(poll.id)
+
+    def close_poll(self, poll_id: uuid.UUID):
+        poll = self.encuesta_repo.get_poll(poll_id)
+        if poll is None or poll.estado != "activa":
+            raise Exception("Encuesta no activa o no existe.")
+        poll.estado = "cerrada"
+        self.encuesta_repo.save_poll(poll)
+        self.notify_observers(poll)
+
+    def get_partial_results(self, poll_id: uuid.UUID):
+        poll = self.encuesta_repo.get_poll(poll_id)
+        if poll is None:
+            raise Exception("Encuesta no encontrada.")
+        return poll.count_votes()
+
+    def get_final_results(self, poll_id: uuid.UUID):
+        poll = self.encuesta_repo.get_poll(poll_id)
+        if poll is None or poll.estado != "cerrada":
+            raise Exception("Encuesta no cerrada o no existe.")
+        resultados = poll.count_votes()
+        if poll.has_tie():
+            return self.desempate_strategy.resolve(poll)
+        return resultados
