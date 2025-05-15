@@ -70,4 +70,29 @@ class CLIController:
             self.session_token = token
             print(f"Login exitoso. Bienvenido {username}!")
         except Exception as e:
-            print(f"Error: {e}"
+            print(f"Error: {e}")
+    def crear_encuesta(self):
+        pregunta = input("Pregunta: ").strip()
+        opciones_str = input("Opciones (separadas por coma): ").strip()
+        duracion = int(input("Duración (segundos): ").strip())
+        tipo = input("Tipo (simple/multiple): ").strip().lower()
+        opciones = [opt.strip() for opt in opciones_str.split(",")]
+        try:
+            poll_id = self.poll_service.create_poll(pregunta, opciones, duracion, tipo)
+            print(f"Encuesta creada con ID: {poll_id}")
+        except Exception as e:
+            print(f"Error al crear encuesta: {e}")
+
+    def votar(self):
+        poll_id = input("ID de encuesta: ").strip()
+        if self.poll_service.is_multiple_choice(poll_id):
+            opciones_str = input("Opciones a votar (separadas por coma): ").strip()
+            opciones = [opt.strip() for opt in opciones_str.split(",")]
+        else:
+            opcion = input("Opción a votar: ").strip()
+            opciones = opcion
+        try:
+            self.poll_service.vote(poll_id, self.current_user, opciones)
+            print("Voto registrado con éxito.")
+        except Exception as e:
+            print(f"Error al votar: {e}")
