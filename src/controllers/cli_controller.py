@@ -96,3 +96,21 @@ class CLIController:
             print("Voto registrado con éxito.")
         except Exception as e:
             print(f"Error al votar: {e}")
+
+    def cerrar_encuesta(self):
+        poll_id = input("ID de encuesta a cerrar: ").strip()
+        try:
+            self.poll_service.close_poll(poll_id)
+            print("Encuesta cerrada.")
+        except Exception as e:
+            print(f"Error al cerrar encuesta: {e}")
+
+    def mostrar_resultados(self):
+        poll_id = input("ID de encuesta: ").strip()
+        try:
+            resultados = self.poll_service.get_final_results(poll_id)
+            print("Resultados finales:")
+            for opcion, datos in resultados.items():
+                print(f"  {opcion}: {datos['count']} votos ({datos['percent']:.2f}%)")
+        except Exception as e:
+            print(f"Error al obtener resultados: {e}")
