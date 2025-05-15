@@ -28,3 +28,27 @@ class EncuestaRepository:
 
     def _cargar_todos(self):
         return json.loads(self.filepath.read_text())
+    
+    def _serialize(self, poll: Poll):
+        return {
+            "id": str(poll.id),
+            "pregunta": poll.pregunta,
+            "opciones": poll.opciones,
+            "votos": poll.votos,
+            "tipo": poll.tipo,
+            "estado": poll.estado.value,
+            "timestamp_inicio": poll.timestamp_inicio.isoformat(),
+            "duracion_segundos": poll.duracion.total_seconds(),
+            "votantes": list(poll.votantes)
+        }
+
+    def _deserialize(self, data):
+        from datetime import timedelta, datetime
+        poll = Poll(data['pregunta'], data['opciones'], int(data['duracion_segundos']), data['tipo'])
+        poll.id = UUID(data['id'])
+        poll.votos = data['votos']
+        poll.estado = poll.estado.__class__(data['estado'])
+        poll.timestamp_inicio = datetime.fromisoformat(data['timestamp_inicio'])
+        poll.duracion = timedelta(seconds=data['duracion_segundos'])
+        poll.votantes = set(data['votantes'])
+        return poll
