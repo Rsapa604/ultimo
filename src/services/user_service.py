@@ -1,5 +1,6 @@
 import bcrypt
 import uuid
+import hashlib
 from src.repositories.usuario_repo import UsuarioRepository
 from src.models.usuario import User
 
