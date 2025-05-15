@@ -30,3 +30,8 @@ class UsuarioRepository:
             "password_hash": user.password_hash,
             "tokens": user.tokens
         }
+
+    def _deserialize(self, data):
+        user = User(data['username'], data['password_hash'])
+        user.tokens = data.get("tokens", [])
+        return user
