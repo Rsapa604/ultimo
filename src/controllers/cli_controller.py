@@ -114,3 +114,28 @@ class CLIController:
                 print(f"  {opcion}: {datos['count']} votos ({datos['percent']:.2f}%)")
         except Exception as e:
             print(f"Error al obtener resultados: {e}")
+
+    def mostrar_tokens(self):
+        try:
+            tokens = self.nft_service.get_tokens_by_owner(self.current_user)
+            if not tokens:
+                print("No tienes tokens NFT.")
+                return
+            for t in tokens:
+                print(f"TokenID: {t.token_id} | Encuesta: {t.poll_id} | Opción: {t.option} | Emitido: {t.issued_at}")
+        except Exception as e:
+            print(f"Error al listar tokens: {e}")
+
+    def transferir_token(self):
+        token_id = input("ID token a transferir: ").strip()
+        nuevo_owner = input("Nuevo propietario (usuario): ").strip()
+        try:
+            self.nft_service.transfer_token(token_id, self.current_user, nuevo_owner)
+            print("Transferencia realizada con éxito.")
+        except Exception as e:
+            print(f"Error en transferencia: {e}")
+
+    def logout(self):
+        print(f"Usuario {self.current_user} ha cerrado sesión.")
+        self.current_user = None
+        self.session_token = None
