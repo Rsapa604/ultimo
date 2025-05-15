@@ -7,34 +7,25 @@ class PollState(Enum):
     CLOSED = "cerrada"
 
 class Poll:
-    def __init__(self, pregunta, opciones, duracion_segundos, tipo="simple"):
-        self.id = uuid.uuid4()
+    def __init__(self, pregunta: str, opciones: list, duracion_segundos: int, tipo: str ="simple"):
+        self.id = str(uuid.uuid4())
         self.pregunta = pregunta
         self.opciones = opciones
-        self.votos = {opcion: 0 for opcion in opciones} 
+        self.votos = {opcion: [] for opcion in opciones} 
         self.tipo = tipo
         self.estado = PollState.ACTIVE
-        self.timestamp_inicio = datetime.now()
+        self.timestamp_inicio = datetime.utcnow()
         self.duracion = timedelta(seconds=duracion_segundos)
-        self.votantes = set()
+        
 
     def esta_activa(self):
         if self.estado == PollState.CLOSED:
             return False
-        if datetime.now() > self.timestamp_inicio + self.duracion:
+        if datetime.utcnow() > self.timestamp_inicio + self.duracion:
             self.estado = PollState.CLOSED
             return False
         return True
 
-    def agregar_voto(self, username, opcion):
-        if not self.esta_activa():
-            raise Exception("Encuesta cerrada")
-        if username in self.votantes:
-            raise Exception("Usuario ya votó")
-        if opcion not in self.opciones:
-            raise Exception("Opción inválida")
-        self.votos[opcion] += 1
-        self.votantes.add(username)
 
     def cerrar(self):
         self.estado = PollState.CLOSED
@@ -59,6 +50,6 @@ class Poll:
         return {op: (len(v), len(v)/total*100) for op, v in self.votos.items()}
 
     def get_final_results(self):
-        if self.estado != PollStatus.CLOSED:
+        if self.estado != PollState.CLOSED:
             raise Exception("Encuesta no cerrada")
         return self.get_partial_results()
