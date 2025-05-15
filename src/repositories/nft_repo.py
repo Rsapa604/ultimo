@@ -1,46 +1,68 @@
 import json
-from pathlib import Path
-from uuid import UUID
+import os 
 from src.models.token_nft import TokenNFT
 from datetime import datetime
 
 class NFTRepository:
-    def __init__(self, filepath="nfts.json"):
-        self.filepath = Path(filepath)
-        if not self.filepath.exists():
-            self.filepath.write_text("[]")
+    def __init__(self, filepath="data/nfts.json"):
+        self.filepath = filepath
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        if not os.path.isfile(self.filepath):
+            with open(self.filepath, "w") as f:
+                json.dump([], f)
 
-    def guardar(self, token: TokenNFT):
-        tokens = self._cargar_todos()
-        tokens = [t for t in tokens if t['token_id'] != str(token.token_id)]
-        tokens.append(self._serialize(token))
-        self.filepath.write_text(json.dumps(tokens, indent=2))
+    def _load_all(self):
+        with open(self.filepath, "r") as f:
+            data = json.load(f)
+        return data
+    
+    def _save_all(self, data):
+        with open(self.filepath, "w") as f:
+            json.dump(data, f, indent=2, default=str)
 
-    def listar_por_owner(self, owner):
-        tokens = self._cargar_todos()
-        return [self._deserialize(t) for t in tokens if t['owner'] == owner]
+    def save(self, token: TokenNFT):
+        data = self._load_all()
+        found = False
+        for i, t in enumerate(data):
+            if t["token_id"] == token.token_id:
+                data[i] = self._token_to_dict(token)
+                found = True
+                break
+        if not found:
+            data.append(self._token_to_dict(token))
+        self._save_all(data)
 
-    def buscar_por_id(self, token_id: UUID):
-        tokens = self._cargar_todos()
-        for t in tokens:
-            if t['token_id'] == str(token_id):
-                return self._deserialize(t)
+    def get_by_owner(self, owner: str):
+        data = self._load_all()
+        return [self._dict_to_token(t) for t in data if t["owner"] == owner]
+    
+    def  get_by_id(self, token_id: str):
+        data = self._load_all()
+        for t in data:
+            if t["token_id"] == token_id:
+                return self._dict_to_token(t)
         return None
 
-    def _cargar_todos(self):
-        return json.loads(self.filepath.read_text())
-    
-    def _serialize(self, token: TokenNFT):
+    def _token_to_dict(self, token: TokenNFT):
         return {
-            "token_id": str(token.token_id),
+            "token_id": token.token_id,
             "owner": token.owner,
-            "poll_id": str(token.poll_id),
+            "poll_id": token.poll_id,
             "option": token.option,
             "issued_at": token.issued_at.isoformat()
         }
-
-    def _deserialize(self, data):
-        token = TokenNFT(data['owner'], UUID(data['poll_id']), data['option'])
-        token.token_id = UUID(data['token_id'])
-        token.issued_at = datetime.fromisoformat(data['issued_at'])
+    
+    def _dict_to_token(self, data):
+        token = TokenNFT(data["owner"], data["poll_id"], data["option"])
+        token.token_id = data["token_id"]
+        token.issued_at = datetime.fromisoformat(data["issued_at"])
         return token
+
+    def update_owner(self, token_id: str, new_owner: str):
+        data = self._load_all()
+        for t in data:
+            if t["token_id"] == token_id:
+                t["owner"] = new_owner
+                self._save_all(data)
+                return True
+        return False
