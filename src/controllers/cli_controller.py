@@ -50,3 +50,24 @@ class CLIController:
                     self.logout()
                 else:
                     print("Comando no reconocido.")
+
+    
+    def registrar_usuario(self):
+        username = input("Usuario: ").strip()
+        password = input("Contraseña: ").strip()
+        try:
+            self.user_service.register(username, password)
+            print(f"Usuario '{username}' registrado con éxito.")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def login_usuario(self):
+        username = input("Usuario: ").strip()
+        password = input("Contraseña: ").strip()
+        try:
+            token = self.user_service.login(username, password)
+            self.current_user = username
+            self.session_token = token
+            print(f"Login exitoso. Bienvenido {username}!")
+        except Exception as e:
+            print(f"Error: {e}"
