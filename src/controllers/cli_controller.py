@@ -71,6 +71,7 @@ class CLIController:
             print(f"Login exitoso. Bienvenido {username}!")
         except Exception as e:
             print(f"Error: {e}")
+            
     def crear_encuesta(self):
         pregunta = input("Pregunta: ").strip()
         opciones_str = input("Opciones (separadas por coma): ").strip()
