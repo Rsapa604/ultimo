@@ -29,3 +29,18 @@ class NFTRepository:
 
     def _cargar_todos(self):
         return json.loads(self.filepath.read_text())
+    
+    def _serialize(self, token: TokenNFT):
+        return {
+            "token_id": str(token.token_id),
+            "owner": token.owner,
+            "poll_id": str(token.poll_id),
+            "option": token.option,
+            "issued_at": token.issued_at.isoformat()
+        }
+
+    def _deserialize(self, data):
+        token = TokenNFT(data['owner'], UUID(data['poll_id']), data['option'])
+        token.token_id = UUID(data['token_id'])
+        token.issued_at = datetime.fromisoformat(data['issued_at'])
+        return token
